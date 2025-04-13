@@ -11,14 +11,17 @@ try {
     
     if (isset($result['error'])) {
         http_response_code($result['errorCode']);
+        header('Content-Type: application/json');
         echo json_encode(['error' => $result['error']]);
         exit;
     }
 
     // Success
     http_response_code(200);
+    header('Content-Type: application/json');
     echo json_encode($result, JSON_PRETTY_PRINT);
 } catch (\Throwable $e) {
     http_response_code(500);
+    header('Content-Type: application/json');
     echo json_encode(['error' => $e->getMessage()]);
 }

@@ -24,11 +24,20 @@
   },
   "system-settings": [
     {
+      "key": "api_enabled",
+      "name": "<strong>Enable REDCap Reporting API</strong>",
+      "type": "checkbox",
+      "super-users-only": true
+    },
+    {
       "key": "user",
-      "name": "Users",
-      "required": false,
-      "type": "user-list",
-      "repeatable": false
+      "name": "Select the user to give access to",
+      "required": true,
+      "type": "dropdown",
+      "choices": [],
+      "autocomplete": true,
+      "repeatable": true,
+      "super-users-only": true
     }
   ],
   "no-auth-pages": [
@@ -36,6 +45,10 @@
   ],
   "no-csrf-pages": [
     "api"
+  ],
+  "auth-ajax-actions": [
+    "generate-token",
+    "delete-token"
   ],
   "compatibility": {
     "php-version-min": "8.0.0",
