@@ -8,7 +8,6 @@ $username = $module->framework->getUser()->getUserName();
 $hasToken = $module->hasValidToken($username);
 $truncatedToken = $module->getTruncatedToken($username);
 $module->framework->initializeJavascriptModuleObject();
-
 ?>
 <h4><i class="fas fa-cloud"></i> REDCap Reporting API</h4>
 <div class="container">
@@ -33,7 +32,7 @@ $module->framework->initializeJavascriptModuleObject();
                         <span>Your API Token: </span>
                         <code id="api-token"></code>
                         <br>
-                        <span>Store this token someplace secure now, because you will not be able to retrieve it again.</span>
+                        <span><strong>Store this token someplace secure now, because you will not be able to retrieve it again.</strong></span>
                     </div>
                     <div class="m-2 p-2" id="truncated-token-container">
                         <span>Your API Token: </span>
@@ -65,7 +64,7 @@ $module->framework->initializeJavascriptModuleObject();
                         <span>Your API Token: </span>
                         <code id="api-token"></code>
                         <br>
-                        <span>Store this token someplace secure now, because you will not be able to retrieve it again.</span>
+                        <span><strong>Store this token someplace secure now, because you will not be able to retrieve it again.</strong></span>
                     </div>
                     <div class="row button-row">
                         <div class="col">

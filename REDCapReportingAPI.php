@@ -152,7 +152,7 @@ namespace YaleREDCap\REDCapReportingAPI;
         if (!$this->isValidToken($token)) {
             return ['error' => 'Invalid token', 'errorCode' => 403];
         }
-        return ['result'=> 'success'];
+        return $this->getReport();
     }
 
     public function isValidToken($token) : bool {
@@ -165,4 +165,58 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
         return false;
     }
- }
+
+    private function getReport() {
+        $sql = "SELECT 
+                    u.username creator,
+                    GROUP_CONCAT(r.username SEPARATOR ';') project_users,
+                    CASE
+                        WHEN completed_time IS NOT NULL THEN 'Completed'
+                        WHEN status = 0 THEN 'Development'
+                        WHEN status = 1 THEN 'Production'
+                        WHEN status = 2 THEN 'Analysis/Cleanup'
+                        ELSE 'Unknown'
+                    END status_formatted,
+                    p.online_offline,
+                    p.app_title,
+                    p.creation_time,
+                    p.project_irb_number
+                from redcap_projects p
+                left join redcap_user_information u
+                on p.created_by = u.ui_id
+                left join redcap_user_rights r
+                on p.project_id = r.project_id
+                group by p.project_id";
+        $result = $this->framework->query($sql, []);
+        $projects = [];
+        while ($row = $result->fetch_assoc()) {
+            $projects[] = [
+                'project_status' => $row['status_formatted'],
+                'project_title' => $row['online_offline'],
+                'project_name' => $row['app_title'],
+                'project_created_by' => $row['creator'],
+                'project_phostid' => SERVER_NAME,
+                'project_created_on' => $row['creation_time'],
+                'project_irb_number' => $row['project_irb_number'],
+                'project_users' => $row['project_users'],
+            ];
+        }
+        return $projects;
+    }
+
+    private static function getProjectStatus($project) {
+        if (!empty($project['completed_time'])) {
+            return 'Completed';
+        }
+        $status = $project['status'];
+        if ($status == 0) {
+            return 'Development';
+        } elseif ($status == 1) {
+            return 'Production';
+        } elseif ($status == 2) {
+            return 'Analysis/Cleanup';
+        } else {
+            return 'Unknown';
+        }
+    }
+}
