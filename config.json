@@ -1,0 +1,44 @@
+{
+  "name": "REDCap Reporting API",
+  "namespace": "YaleREDCap\\REDCapReportingAPI",
+  "description": "TBD",
+  "authors": [
+    {
+      "name": "Andrew Poppe",
+      "email": "andrew.poppe@yale.edu",
+      "institution": "Yale University"
+    }
+  ],
+  "framework-version": 16,
+  "links": {
+    "control-center": [
+      {
+        "name": "REDCap Reporting API",
+        "key": "redcap-reporting-api",
+        "icon": "fas fa-cloud",
+        "url": "api-config.php",
+        "show-header-and-footer": true
+      }
+    ],
+    "project": []
+  },
+  "system-settings": [
+    {
+      "key": "user",
+      "name": "Users",
+      "required": false,
+      "type": "user-list",
+      "repeatable": false
+    }
+  ],
+  "no-auth-pages": [
+    "api"
+  ],
+  "no-csrf-pages": [
+    "api"
+  ],
+  "compatibility": {
+    "php-version-min": "8.0.0",
+    "redcap-version-min": "14.6.4"
+  }
+}
