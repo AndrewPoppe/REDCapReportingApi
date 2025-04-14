@@ -7,6 +7,7 @@ namespace YaleREDCap\REDCapReportingAPI;
 $username = $module->framework->getUser()->getUserName();
 $hasToken = $module->hasValidToken($username);
 $truncatedToken = $module->getTruncatedToken($username);
+$customQueriesActive = $module->areDatabaseQueryToolQueriesAllowed();
 $module->framework->initializeJavascriptModuleObject();
 
 ?>
@@ -79,7 +80,7 @@ $module->framework->initializeJavascriptModuleObject();
         <?php } ?>
         <div id= "api-documentation" class="card mt-3 bg-light" style="<?= $hasToken ? '' : 'display: none;' ?>">
             <div class="card-body">
-                <h5 class="card-title">API Documentation</h5>
+                <h5 class="card-title">API Report Documentation</h5>
                 <div>
                     <span>
                         To call the API, send a <code>GET</code> to the following URL with your 
@@ -200,6 +201,31 @@ $module->framework->initializeJavascriptModuleObject();
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div class="card mt-3 bg-light" style="<?= ($hasToken && $customQueriesActive) ? '' : 'display: none;' ?>">
+            <div class="card-body">
+                <h5 class="card-title">API Custom Query Documentation</h5>
+                <p>
+                    The Custom Query API allows you to access queries saved in the Database Query Tool via this API.
+                </p>
+                <h4>Custom Queries</h4>
+                <table class="table table-striped table-sm align-middle table-bordered table-hover">
+                    <thead>
+                        <tr>
+                            <th>Query ID (qid)</th>
+                            <th>Query Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($module->getCustomQueries() as $query) { ?>
+                            <tr>
+                                <td><?= $module->framework->escape($query['qid']) ?></td>
+                                <td><?= $module->framework->escape($query['title']) ?></td>
+                            </tr>
+                        <?php } ?>
+                    </tbody>
+                </table>
             </div>
         </div>
 </div>

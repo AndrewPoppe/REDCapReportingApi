@@ -285,4 +285,22 @@ namespace YaleREDCap\REDCapReportingAPI;
             return null;
         }
     }
+
+    public function getCustomQueries() {
+        try {
+            $sql = "SELECT qid, title FROM redcap_custom_queries";
+            $result = $this->framework->query($sql, []);
+            $queries = [];
+            while ($row = $result->fetch_assoc()) {
+                $queries[] = [
+                    'qid' => $row['qid'],
+                    'title' => $row['title'],
+                ];
+            }
+            return $queries;
+        } catch (\Throwable $e) {
+            $this->log("getCustomQueries error", ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
 }
