@@ -8,6 +8,7 @@ $username = $module->framework->getUser()->getUserName();
 $hasToken = $module->hasValidToken($username);
 $truncatedToken = $module->getTruncatedToken($username);
 $module->framework->initializeJavascriptModuleObject();
+
 ?>
 <h4><i class="fas fa-cloud"></i> REDCap Reporting API</h4>
 <div class="container">
@@ -82,16 +83,133 @@ $module->framework->initializeJavascriptModuleObject();
                 <div>
                     <span>
                         To call the API, send a <code>GET</code> to the following URL with your 
-                        API token set as the query parameter <code>token</code>:
+                        API token set as the query parameter <code>token</code> and the report you 
+                        want to access set as the query parameter <code>report</code>.
                     </span>
                     <br>
-                    <div class="m-2 p-2">
-                        <code><?=$module->getApiUrl() . "&token="?></code><code id="api-url-token"><?=$truncatedToken?></code>
+                    <ul>
+                        <li>Base url
+                            <ul>
+                                <li><span class="api_url"><code><?=$module->getApiUrl()?></code></span></li>
+                            </ul>
+                        </li>
+                        <li><code>token</code> parameter
+                            <ul>
+                                <li><span>This is your API token</span></li>
+                                <li>Example: <code>token=12345ABCDE67890FGHIJKL</code></li>
+                            </ul>
+                        </li>
+                        <li><code>report</code> parameter
+                            <ul>
+                                <li>This is the report whose contents you want to access</li>
+                                <li>Example: <code>report=project_housekeeping</code></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="accordion" id="apiEndpoints">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="api_housekeeping_heading">
+                            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#api_project_housekeeping" aria-expanded="true" aria-controls="collapseOne">
+                                Project Housekeeping
+                            </button>
+                        </h2>
+                        <div id="api_project_housekeeping" class="accordion-collapse collapse show" aria-labelledby="api_housekeeping_heading">
+                            <div class="accordion-body">
+                                <p>
+                                    The Project Housekeeping report provides a list of all projects in the REDCap server, along with their status and other information.
+                                </p>
+                                <p>
+                                    The API token is required to access this report. 
+                                    The report is returned as a JSON object.
+                                </p>
+                                <div class="m-2 p-2">
+                                    <span class="api_url"><code><?=$module->getApiUrl() . "&token="?></code><code class="api-url-token"><?=$truncatedToken?>&report=project_housekeeping</code></span>
+                                </div>
+                                <h4>Report contents</h4>
+                                <table class="table table-striped table-sm align-middle table-bordered table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Field Name</th>
+                                            <th>Field Type</th>
+                                            <th>Description</th>
+                                            <th>Values</th>
+                                            <th>Example</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <th scope="row">status</th>
+                                            <td>string</td>
+                                            <td>The status of the project, formatted as a string</td>
+                                            <td>Development, Production, Analysis/Cleanup, Completed</td>
+                                            <td>Development</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">online_offline</th>
+                                            <td>integer</td>
+                                            <td>The online/offline status of the project</td>
+                                            <td>0 = Offline, 1 = Online</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_name</th>
+                                            <td>string</td>
+                                            <td>The name of the project</td>
+                                            <td>N/A</td>
+                                            <td>My Project</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_created_by</th>
+                                            <td>string</td>
+                                            <td>The username of the creator of the project</td>
+                                            <td>N/A</td>
+                                            <td>jdoe</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_phostid</th>
+                                            <td>string</td>
+                                            <td>The project host ID</td>
+                                            <td><?=SERVER_NAME?></td>
+                                            <td><?=SERVER_NAME?></td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_created_on</th>
+                                            <td>string</td>
+                                            <td>The date the project was created</td>
+                                            <td>N/A</td>
+                                            <td>1970-01-01 12:00:00</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_irb_number</th>
+                                            <td>string</td>
+                                            <td>The IRB number of the project</td>
+                                            <td>N/A</td>
+                                            <td>123456</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_users</th>
+                                            <td>string</td>
+                                            <td>The users associated with the project, formatted as a semicolon-delimited string</td>
+                                            <td>N/A</td>
+                                            <td>jdoe;jsmith</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 </div>
+<style>
+    .api_url {
+        user-select: all;
+        font-size: 1.2em;
+        font-family: monospace;
+    }
+</style>
 <script>
     $(function() {
         const module = <?=$module->getJavascriptModuleObjectName()?>;
@@ -103,7 +221,7 @@ $module->framework->initializeJavascriptModuleObject();
                 $('#api-token-container').show();
                 $('.button-row').hide();
                 $('#api-documentation').show();
-                $('#api-url-token').text(response.token);
+                $('.api-url-token').text(response.token);
                 $('#no-token-card').toggleClass('bg-danger-subtle bg-success-subtle');
                 $('#no-token-title').text('API Token Generated');
             }).catch(function(err) {

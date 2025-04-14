@@ -11,16 +11,20 @@ namespace YaleREDCap\REDCapReportingAPI;
  {
 
     public function redcap_module_configuration_settings($project_id, $settings) {
-        $users = $this->getAllUsers();
+        try {
+            $users = $this->getAllUsers();
 
-        $settings = array_map(function($setting) use ($users) {
-            if (isset($setting['key']) && $setting['key'] === 'user') {
-                $setting['choices'] = $users;
-            }
-            return $setting;
-        }, $settings);
-
-        return $settings;
+            $settings = array_map(function($setting) use ($users) {
+                if (isset($setting['key']) && $setting['key'] === 'user') {
+                    $setting['choices'] = $users;
+                }
+                return $setting;
+            }, $settings);
+        } catch (\Throwable $e) {
+            $this->log("configuration settings error", ['error' => $e->getMessage()]);
+        } finally {
+            return $settings;
+        }
     }
 
     public function redcap_module_link_check_display($project_id, $link) {
@@ -41,14 +45,14 @@ namespace YaleREDCap\REDCapReportingAPI;
             if ($action === 'generate-token') {
                 $token = $this->generateAPIToken();
                 $truncatedToken = $this->setToken($user_id, $token);
-                $this->log("set token", ['token' => $truncatedToken, 'username' => $user_id]);
+                $this->log("set token", ['token' => $truncatedToken, 'token_holder' => $user_id]);
                 return [
                     'token' => $token,
                     'truncated_token' => $truncatedToken
                 ];
             } elseif ($action === 'delete-token') {
                 $this->setToken($user_id, '');
-                $this->log("delete token", ['username' => $user_id]);
+                $this->log("delete token", ['token_holder' => $user_id]);
                 return;
             } else {
                 return null;
@@ -105,6 +109,10 @@ namespace YaleREDCap\REDCapReportingAPI;
         return $this->framework->getSystemSetting('api_enabled') ?? false;
     }
 
+    public function areDatabaseQueryToolQueriesAllowed() : bool {
+        return $this->framework->getSystemSetting('database_query_tool_queries_enabled') ?? false;
+    }
+
     public function getTruncatedToken(string $username) : string {
         $user = $this->getAllowedUser($username);
         if (empty($user)) {
@@ -135,7 +143,6 @@ namespace YaleREDCap\REDCapReportingAPI;
         $truncatedTokens[$username] = $truncatedToken;
         $this->framework->setSystemSetting('token', $tokens);
         $this->framework->setSystemSetting('truncated_token', $truncatedTokens);
-        $this->log("set token", ['token' => $truncatedToken, 'username' => $username]);
         
         return $truncatedToken;
     }
@@ -145,14 +152,26 @@ namespace YaleREDCap\REDCapReportingAPI;
         return $url;
     }
 
-    public function handleApi($token) {
+    public function handleApi($token, $request) {
         if (!$this->isApiEnabled()) {
             return ['error' => 'API is disabled', 'errorCode' => 503];
         }
         if (!$this->isValidToken($token)) {
             return ['error' => 'Invalid token', 'errorCode' => 403];
         }
-        return $this->getReport();
+        if (empty($request)) {
+            return ['error' => 'No report or query specified', 'errorCode' => 400];
+        }
+        if (!$this->areDatabaseQueryToolQueriesAllowed() && isset($request['query'])){
+            return ['error' => 'Database query tool queries are not allowed', 'errorCode' => 403];
+        }
+        if (isset($request['report'])) {
+            return $this->getReport($request['report']);
+        } else if (isset($request['query'])) {
+            return $this->getQuery($request['query']);
+        } else {
+            return ['error' => 'Invalid request', 'errorCode' => 400];
+        }
     }
 
     public function isValidToken($token) : bool {
@@ -166,7 +185,15 @@ namespace YaleREDCap\REDCapReportingAPI;
         return false;
     }
 
-    private function getReport() {
+    private function getReport($reportName) {
+        if ($reportName === 'projects') {
+            return $this->getProjectsReport();
+        } else {
+            return ['error' => 'Invalid report name', 'errorCode' => 400];
+        }
+    }
+
+    private function getProjectsReport() {
         $sql = "SELECT 
                     u.username creator,
                     GROUP_CONCAT(r.username SEPARATOR ';') project_users,
@@ -192,7 +219,7 @@ namespace YaleREDCap\REDCapReportingAPI;
         while ($row = $result->fetch_assoc()) {
             $projects[] = [
                 'project_status' => $row['status_formatted'],
-                'project_title' => $row['online_offline'],
+                'project_onlines' => $row['online_offline'],
                 'project_name' => $row['app_title'],
                 'project_created_by' => $row['creator'],
                 'project_phostid' => SERVER_NAME,
@@ -217,6 +244,45 @@ namespace YaleREDCap\REDCapReportingAPI;
             return 'Analysis/Cleanup';
         } else {
             return 'Unknown';
+        }
+    }
+
+    private function getQuery($queryNumber) {
+        try {
+            $queryNumber = (int)$queryNumber;
+            if ($queryNumber < 1) {
+                return ['error' => 'Invalid query number', 'errorCode' => 400];
+            }
+            $query = $this->getQueryByNumber($queryNumber);
+            if (empty($query)) {
+                return ['error' => 'Invalid query number', 'errorCode' => 400];
+            }
+            $result = $this->framework->query($query, []);
+            $data = [];
+            while ($row = $result->fetch_assoc()) {
+                $data[] = $row;
+            }
+            return $data;
+        } catch (\Throwable $e) {
+            return ['error' => $e->getMessage(), 'errorCode' => 500];
+        }
+    }
+
+    private function getQueryByNumber($queryNumber) {
+        try {
+            $sql = "SELECT query FROM redcap_custom_queries WHERE qid = ?";
+            $result = $this->framework->query($sql, [$queryNumber]);
+            if (empty($result)) {
+                return null;
+            }
+            $row = $result->fetch_assoc();
+            if (empty($row)) {
+                return null;
+            }
+            return $row['query'];
+        } catch (\Throwable $e) {
+            $this->log("getQueryByNumber error", ['error' => $e->getMessage()]);
+            return null;
         }
     }
 }
