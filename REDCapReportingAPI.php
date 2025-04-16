@@ -13,10 +13,14 @@ namespace YaleREDCap\REDCapReportingAPI;
     public function redcap_module_configuration_settings($project_id, $settings) {
         try {
             $users = $this->getAllUsers();
+            $customQueries = $this->getAllCustomQueries();
 
-            $settings = array_map(function($setting) use ($users) {
+            $settings = array_map(function($setting) use ($users, $customQueries) {
                 if (isset($setting['key']) && $setting['key'] === 'user') {
                     $setting['choices'] = $users;
+                }
+                if (isset($setting['key']) && $setting['key'] === 'database_query_tool_queries') {
+                    $setting['choices'] = $customQueries;
                 }
                 return $setting;
             }, $settings);
@@ -30,7 +34,8 @@ namespace YaleREDCap\REDCapReportingAPI;
     public function redcap_module_link_check_display($project_id, $link) {
         $username = $this->framework->getUser()->getUserName();
         $userAllowed = $this->isUserAllowed($username);
-        if (!$userAllowed) {
+        $apiEnabled = $this->isApiEnabled();
+        if (!$userAllowed || !$apiEnabled) {
             return null;
         }
         return $link;
@@ -73,9 +78,28 @@ namespace YaleREDCap\REDCapReportingAPI;
                 'name' => $row['name'],
             ];
         }
-        return $users;
+        return $this->framework->escape($users);
     }
 
+    public function getAllCustomQueries() {
+        try {
+            $sql = "SELECT qid, title FROM redcap_custom_queries";
+            $result = $this->framework->query($sql, []);
+            $queries = [];
+            $index = 1;
+            while ($row = $result->fetch_assoc()) {
+                $queries[] = [
+                    'value' => $row['qid'],
+                    'name' => $row['title'] . ' (qid: ' . $row['qid'] . ')',
+                    'title' => $row['title'],
+                ];
+            }
+            return $this->framework->escape($queries);
+        } catch (\Throwable $e) {
+            $this->log("getCustomQueries error", ['error' => $e->getMessage()]);
+            return [];
+        }
+    }
     
     public function getAllowedUser(string $username) {
         if (empty($username) || !$this->isUserAllowed($username)) {
@@ -97,6 +121,21 @@ namespace YaleREDCap\REDCapReportingAPI;
         return in_array($username, $users, true);
     }
 
+    public function isQueryAllowed($qid) : bool {
+        $queries = $this->framework->getSystemSetting('database_query_tool_queries') ?? [];
+        return in_array($qid, $queries, true);
+    }
+
+    public function getAllowedQueries() : array {
+        $queries = $this->getAllCustomQueries();
+        if (empty($queries)) {
+            return [];
+        }
+        return array_filter($queries, function($query) {
+            return $this->isQueryAllowed($query['value']);
+        });
+    }
+
     public function hasValidToken(string $username) : bool {
         $user = $this->getAllowedUser($username);
         if (empty($user)) {
@@ -111,6 +150,10 @@ namespace YaleREDCap\REDCapReportingAPI;
 
     public function areDatabaseQueryToolQueriesAllowed() : bool {
         return $this->framework->getSystemSetting('database_query_tool_queries_enabled') ?? false;
+    }
+
+    public function areAllCustomQueriesAllowed() : bool {
+        return empty($this->framework->getSystemSetting('database_query_tool_queries'));
     }
 
     public function getTruncatedToken(string $username) : string {
@@ -164,6 +207,9 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
         if (!$this->areDatabaseQueryToolQueriesAllowed() && isset($request['query'])){
             return ['error' => 'Database query tool queries are not allowed', 'errorCode' => 403];
+        }
+        if (isset($request['query']) && !$this->areAllCustomQueriesAllowed() && !$this->isQueryAllowed($request['query'])) {
+            return ['error' => 'Query not allowed', 'errorCode' => 403];
         }
         if (isset($request['report'])) {
             return $this->getReport($request['report']);
@@ -286,21 +332,4 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
     }
 
-    public function getCustomQueries() {
-        try {
-            $sql = "SELECT qid, title FROM redcap_custom_queries";
-            $result = $this->framework->query($sql, []);
-            $queries = [];
-            while ($row = $result->fetch_assoc()) {
-                $queries[] = [
-                    'qid' => $row['qid'],
-                    'title' => $row['title'],
-                ];
-            }
-            return $queries;
-        } catch (\Throwable $e) {
-            $this->log("getCustomQueries error", ['error' => $e->getMessage()]);
-            return [];
-        }
-    }
 }

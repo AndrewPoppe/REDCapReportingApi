@@ -30,12 +30,6 @@
       "super-users-only": true
     },
     {
-      "key": "database_query_tool_queries_enabled",
-      "name": "<strong>Enable fetching Database Query Tool queries</strong>",
-      "type": "checkbox",
-      "super-users-only": true
-    },
-    {
       "key": "user",
       "name": "Select the user to give access to",
       "required": true,
@@ -43,6 +37,22 @@
       "choices": [],
       "autocomplete": true,
       "repeatable": true,
+      "super-users-only": true
+    },
+    {
+      "key": "database_query_tool_queries_enabled",
+      "name": "<strong>Enable fetching Database Query Tool queries</strong>",
+      "type": "checkbox",
+      "super-users-only": true
+    },
+    {
+      "key": "database_query_tool_queries",
+      "name": "<strong>Available Database Query Tool queries</strong>:<br>Select the Database Query Tool queries that should be available to fetch via this API. If none are selected, ALL queries will be available to fetch via this API",
+      "required": false,
+      "type": "dropdown",
+      "repeatable": true,
+      "choices": [],
+      "autocomplete": true,
       "super-users-only": true
     }
   ],

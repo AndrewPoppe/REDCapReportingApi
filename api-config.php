@@ -8,6 +8,7 @@ $username = $module->framework->getUser()->getUserName();
 $hasToken = $module->hasValidToken($username);
 $truncatedToken = $module->getTruncatedToken($username);
 $customQueriesActive = $module->areDatabaseQueryToolQueriesAllowed();
+$allowedQueries = $module->getAllowedQueries();
 $module->framework->initializeJavascriptModuleObject();
 
 ?>
@@ -40,14 +41,14 @@ $module->framework->initializeJavascriptModuleObject();
                         <span>Your API Token: </span>
                         <code id="truncated-token"><?= $truncatedToken ?></code>
                     </div>
-                    <div class="row button-row">
-                        <div class="col">
-                            <button class="btn btn-warning" id="generate-token" type="button">
+                    <div class="row button-row justify-content-end">
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-warning" id="generate-token" type="button">
                                 <i class="fas fa-arrows-rotate"></i> Regenerate API Token
                             </button>
                         </div>
-                        <div class="col ms-auto">
-                            <button class="btn btn-danger" id="delete-token" type="button">
+                        <div class="col-auto">
+                            <button class="btn btn-sm btn-danger" id="delete-token" type="button">
                                 <i class="fas fa-trash"></i> Delete API Token
                             </button>
                         </div>
@@ -66,10 +67,10 @@ $module->framework->initializeJavascriptModuleObject();
                         <span>Your API Token: </span>
                         <code id="api-token"></code>
                         <br>
-                        <span><strong>Store this token someplace secure now, because you will not be able to retrieve it again.</strong></span>
+                        <span class="text-dangerrc"><strong>Store this token someplace secure now, because you will not be able to retrieve it again.</strong></span>
                     </div>
-                    <div class="row button-row">
-                        <div class="col">
+                    <div class="row button-row justify-content-center">
+                        <div class="col-auto">
                             <button class="btn btn-primary" id="generate-token" type="button">
                                 <i class="fas fa-key"></i> Generate API Token
                             </button>
@@ -125,7 +126,7 @@ $module->framework->initializeJavascriptModuleObject();
                                     The report is returned as a JSON object.
                                 </p>
                                 <div class="m-2 p-2">
-                                    <span class="api_url"><code><?=$module->getApiUrl() . "&token="?></code><code class="api-url-token"><?=$truncatedToken?>&report=project_housekeeping</code></span>
+                                    <span class="api_url"><code><?=$module->getApiUrl() . "&report=<mark>project_housekeeping</mark>&token="?></code><code class="api-url-token"><?=$truncatedToken?></code></span>
                                 </div>
                                 <h4>Report contents</h4>
                                 <table class="table table-striped table-sm align-middle table-bordered table-hover">
@@ -215,15 +216,23 @@ $module->framework->initializeJavascriptModuleObject();
                         <tr>
                             <th>Query ID (qid)</th>
                             <th>Query Name</th>
+                            <th>Query Allowed</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php foreach ($module->getCustomQueries() as $query) { ?>
+                        <?php 
+                            if (empty($allowedQueries)) { ?>
                             <tr>
-                                <td><?= $module->framework->escape($query['qid']) ?></td>
-                                <td><?= $module->framework->escape($query['title']) ?></td>
+                                <td colspan="3" class="text-center">No custom queries available</td>
                             </tr>
-                        <?php } ?>
+                        <?php } else {
+                        foreach ($module->getAllowedQueries() as $query) { ?>
+                            <tr>
+                                <td><?= $module->framework->escape($query['value']) ?></td>
+                                <td><?= $module->framework->escape($query['title']) ?></td>
+                                <td><?= $module->isQueryAllowed($query['value']) ? 'Yes' : 'No'?></td>
+                            </tr>
+                        <?php }} ?>
                     </tbody>
                 </table>
             </div>
