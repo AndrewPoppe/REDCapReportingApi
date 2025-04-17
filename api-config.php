@@ -125,9 +125,14 @@ $module->framework->initializeJavascriptModuleObject();
                                     The API token is required to access this report. 
                                     The report is returned as a JSON object.
                                 </p>
-                                <div class="m-2 p-2">
-                                    <span class="api_url"><code><?=$module->getApiUrl() . "&report=<mark>project_housekeeping</mark>&token="?></code><code class="api-url-token"><?=$truncatedToken?></code></span>
-                                </div>
+                                <h4 class="mt-2">Info</h4>
+                                    <ul>
+                                        <li><strong>Query report value</strong>: <code>project_housekeeping</code></li>
+                                        <li><strong>Return Type</strong>: <code>JSON</code></li>
+                                        <li><strong>Report URL</strong>: <span class="api_url"><code><?=$module->getApiUrl() . "&report=<mark>project_housekeeping</mark>&token="?></code><code class="api-url-token"><?=$truncatedToken?></code></span></li>
+                                    </ul>
+                                    
+                                
                                 <h4>Report contents</h4>
                                 <table class="table table-striped table-sm align-middle table-bordered table-hover">
                                     <thead>

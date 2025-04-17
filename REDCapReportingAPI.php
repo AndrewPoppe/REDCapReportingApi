@@ -232,7 +232,7 @@ namespace YaleREDCap\REDCapReportingAPI;
     }
 
     private function getReport($reportName) {
-        if ($reportName === 'projects') {
+        if ($reportName === 'project_housekeeping') {
             return $this->getProjectsReport();
         } else {
             return ['error' => 'Invalid report name', 'errorCode' => 400];
