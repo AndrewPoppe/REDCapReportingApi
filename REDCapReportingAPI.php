@@ -152,10 +152,6 @@ namespace YaleREDCap\REDCapReportingAPI;
         return $this->framework->getSystemSetting('database_query_tool_queries_enabled') ?? false;
     }
 
-    public function areAllCustomQueriesAllowed() : bool {
-        return empty($this->framework->getSystemSetting('database_query_tool_queries'));
-    }
-
     public function getTruncatedToken(string $username) : string {
         $user = $this->getAllowedUser($username);
         if (empty($user)) {
@@ -196,36 +192,52 @@ namespace YaleREDCap\REDCapReportingAPI;
     }
 
     public function handleApi($token, $request) {
+        $error = null;
+        $user = $this->validateUser($token);
+        $requestedQuery = trim($request['query'] ?? '');
+        $requestedReport = trim($request['report'] ?? '');
+
         if (!$this->isApiEnabled()) {
-            return ['error' => 'API is disabled', 'errorCode' => 503];
+            $error = ['error' => 'API is disabled', 'errorCode' => 503];
+        } else if (!$user) {
+            $error = ['error' => 'Invalid token', 'errorCode' => 403];
+        } else if (empty($request)) {
+            $error = ['error' => 'No report or query specified', 'errorCode' => 400];
+        } else if ($requestedReport !== '' && $requestedQuery !== '') {
+            $error = ['error' => 'Cannot specify both report and query', 'errorCode' => 400];
+        } else if (!$this->areDatabaseQueryToolQueriesAllowed() && $requestedQuery !== ''){
+            $error = ['error' => 'Database query tool queries are not allowed', 'errorCode' => 403];
+        } else if ($requestedQuery !== '' && !$this->isQueryAllowed($requestedQuery)) {
+            $error = ['error' => 'Query is not allowed', 'errorCode' => 403];
         }
-        if (!$this->isValidToken($token)) {
-            return ['error' => 'Invalid token', 'errorCode' => 403];
+
+        if ($error) {
+            $this->log("Reporting API error", ['error' => $error['error'], 'user' => $user, 'request' => json_encode($request)]);
+            return $error;
         }
-        if (empty($request)) {
-            return ['error' => 'No report or query specified', 'errorCode' => 400];
-        }
-        if (!$this->areDatabaseQueryToolQueriesAllowed() && isset($request['query'])){
-            return ['error' => 'Database query tool queries are not allowed', 'errorCode' => 403];
-        }
-        if (isset($request['query']) && !$this->areAllCustomQueriesAllowed() && !$this->isQueryAllowed($request['query'])) {
-            return ['error' => 'Query not allowed', 'errorCode' => 403];
-        }
-        if (isset($request['report'])) {
-            return $this->getReport($request['report']);
-        } else if (isset($request['query'])) {
-            return $this->getQuery($request['query']);
+
+        if ($requestedReport !== '') {
+            $result = $this->getReport($requestedReport);
+        } else if ($requestedQuery !== '') {
+            $result = $this->getQuery($requestedQuery);
         } else {
-            return ['error' => 'Invalid request', 'errorCode' => 400];
+            $result = ['error' => 'Invalid request', 'errorCode' => 400];
         }
+
+        if (isset($result['error'])) {
+            $this->log("Reporting API error", ['error' => $result['error'], 'user' => $user, 'request' => json_encode($request)]);
+        } else {
+            $this->log("Reporting API success", ['user' => $user, 'request' => json_encode($request)]);
+        }
+        return $result;
     }
 
-    public function isValidToken($token) : bool {
+    public function validateUser($token) : string|bool {
         $tokens = $this->framework->getSystemSetting('token') ?? [];
 
         foreach ($tokens as $user => $candidateToken) {
             if (password_verify($token, $candidateToken) && $this->isUserAllowed($user)) {
-                return true;
+                return $user;
             }
         }
         return false;
@@ -308,7 +320,7 @@ namespace YaleREDCap\REDCapReportingAPI;
             while ($row = $result->fetch_assoc()) {
                 $data[] = $row;
             }
-            return $data;
+            return ['data' => $data, 'query' => $query];
         } catch (\Throwable $e) {
             return ['error' => $e->getMessage(), 'errorCode' => 500];
         }
@@ -330,6 +342,41 @@ namespace YaleREDCap\REDCapReportingAPI;
             $this->log("getQueryByNumber error", ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /** 
+     * Get header Authorization
+     * */
+    private function getAuthorizationHeader(){
+        $headers = 2;
+        if (isset($_SERVER['Authorization'])) {
+            $headers = trim($_SERVER["Authorization"]);
+            return 3;
+        }
+        else if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
+            $headers = trim($_SERVER["HTTP_AUTHORIZATION"]);
+            return 4;
+        } elseif (function_exists('apache_request_headers')) {
+            $requestHeaders = apache_request_headers();
+            $requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
+            if (isset($requestHeaders['Authorization'])) {
+                $headers = trim($requestHeaders['Authorization']);
+            }
+        }
+        return $headers;
+    }
+
+    /**
+     * Get access token from header
+     * */
+    public function getBearerToken() {
+        $headers = $this->getAuthorizationHeader();
+        if (!empty($headers)) {
+            if (preg_match('/Bearer\s+(\S+)/', $headers, $matches)) {
+                return $matches[1];
+            }
+        }
+        return null;
     }
 
 }

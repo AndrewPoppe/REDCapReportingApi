@@ -1,7 +1,7 @@
 {
   "name": "REDCap Reporting API",
   "namespace": "YaleREDCap\\REDCapReportingAPI",
-  "description": "TBD",
+  "description": "This module provides an API to access Database Query Tool queries.",
   "authors": [
     {
       "name": "Andrew Poppe",
@@ -47,7 +47,7 @@
     },
     {
       "key": "database_query_tool_queries",
-      "name": "<strong>Available Database Query Tool queries</strong>:<br>Select the Database Query Tool queries that should be available to fetch via this API. If none are selected, ALL queries will be available to fetch via this API",
+      "name": "<strong>Available Database Query Tool queries</strong>:<br>Select the Database Query Tool queries that should be available to fetch via this API. Only queries selected here will be available to fetch via this API",
       "required": false,
       "type": "dropdown",
       "repeatable": true,
@@ -69,5 +69,6 @@
   "compatibility": {
     "php-version-min": "8.0.0",
     "redcap-version-min": "14.6.4"
-  }
+  },
+  "enable-no-auth-logging": true
 }

@@ -84,8 +84,8 @@ $module->framework->initializeJavascriptModuleObject();
                 <h5 class="card-title">API Report Documentation</h5>
                 <div>
                     <span>
-                        To call the API, send a <code>GET</code> to the following URL with your 
-                        API token set as the query parameter <code>token</code> and the report you 
+                        To call the API, send a <code>GET</code> to the following URL with an authorization header 
+                        containing your <code>Bearer</code> token and the report you
                         want to access set as the query parameter <code>report</code>.
                     </span>
                     <br>
@@ -95,16 +95,16 @@ $module->framework->initializeJavascriptModuleObject();
                                 <li><span class="api_url"><code><?=$module->getApiUrl()?></code></span></li>
                             </ul>
                         </li>
-                        <li><code>token</code> parameter
-                            <ul>
-                                <li><span>This is your API token</span></li>
-                                <li>Example: <code>token=12345ABCDE67890FGHIJKL</code></li>
-                            </ul>
-                        </li>
                         <li><code>report</code> parameter
                             <ul>
                                 <li>This is the report whose contents you want to access</li>
                                 <li>Example: <code>report=project_housekeeping</code></li>
+                            </ul>
+                        </li>
+                        <li>Authorization header
+                            <ul>
+                                <li><span>This is your API token</span></li>
+                                <li>Example: <code>Authorization: Bearer 12345ABCDE67890FGHIJKL</code></li>
                             </ul>
                         </li>
                     </ul>
@@ -129,7 +129,7 @@ $module->framework->initializeJavascriptModuleObject();
                                     <ul>
                                         <li><strong>Query report value</strong>: <code>project_housekeeping</code></li>
                                         <li><strong>Return Type</strong>: <code>JSON</code></li>
-                                        <li><strong>Report URL</strong>: <span class="api_url"><code><?=$module->getApiUrl() . "&report=<mark>project_housekeeping</mark>&token="?></code><code class="api-url-token"><?=$truncatedToken?></code></span></li>
+                                        <li><strong>Report URL</strong>: <span class="api_url"><code><?=$module->getApiUrl() . "&report=<mark>project_housekeeping</mark>"?></code></span></li>
                                     </ul>
                                     
                                 

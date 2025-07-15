@@ -5,19 +5,13 @@ namespace YaleREDCap\REDCapReportingAPI;
 /** @var YaleProjectsApi $module */
 
 try {
-    $token_unsafe = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_SPECIAL_CHARS);
+    // $token_unsafe = filter_input(INPUT_GET, 'token', FILTER_SANITIZE_SPECIAL_CHARS);
+    $token_unsafe = $module->getBearerToken();
     $token = trim($module->framework->sanitizeAPIToken($token_unsafe));
 
     $report = trim(filter_input(INPUT_GET, 'report', FILTER_SANITIZE_SPECIAL_CHARS));
     $query = trim(filter_input(INPUT_GET, 'query', FILTER_SANITIZE_SPECIAL_CHARS));
-    if (!empty($report)) {
-        $result = $module->handleApi($token, ['report' => $report]);
-    } else if (!empty($query)) {
-        $result = $module->handleApi($token, ['query' => $query]);
-    } else {
-        $result = ['error' => 'No report or query specified', 'errorCode' => 400];
-    }
-    
+    $result = $module->handleApi($token, ['report' => $report, 'query' => $query]);    
     
     if (isset($result['error'])) {
         http_response_code($result['errorCode']);
