@@ -83,7 +83,13 @@ namespace YaleREDCap\REDCapReportingAPI;
 
     public function getAllCustomQueries() {
         try {
-            $sql = "SELECT qid, title FROM redcap_custom_queries";
+            // $sql = "SELECT qid, title FROM redcap_custom_queries";
+            $sql = "SELECT q.qid, q.title, q.query, f.name folder FROM redcap_custom_queries q
+                    LEFT JOIN redcap_custom_queries_folders_items i 
+                    ON i.qid = q.qid
+                    LEFT JOIN redcap_custom_queries_folders f
+                    ON f.folder_id = i.folder_id
+                    ORDER BY position,q.qid";
             $result = $this->framework->query($sql, []);
             $queries = [];
             $index = 1;
@@ -92,6 +98,7 @@ namespace YaleREDCap\REDCapReportingAPI;
                     'value' => $row['qid'],
                     'name' => $row['title'] . ' (qid: ' . $row['qid'] . ')',
                     'title' => $row['title'],
+                    'folder' => $row['folder'] ?? '',
                 ];
             }
             return $this->framework->escape($queries);
@@ -218,7 +225,7 @@ namespace YaleREDCap\REDCapReportingAPI;
 
         if ($requestedReport !== '') {
             $result = $this->getReport($requestedReport);
-        } else if ($requestedQuery !== '') {
+        } else if ($requestedQuery !== '' && $this->isQueryAllowed($requestedQuery)) {
             $result = $this->getQuery($requestedQuery);
         } else {
             $result = ['error' => 'Invalid request', 'errorCode' => 400];
@@ -315,6 +322,10 @@ namespace YaleREDCap\REDCapReportingAPI;
             if (empty($query)) {
                 return ['error' => 'Invalid query number', 'errorCode' => 400];
             }
+            $query = $this->cleanQuery($query);
+            if (empty($query)) {
+                return ['error' => 'Invalid query', 'errorCode' => 400];
+            }
             $result = $this->framework->query($query, []);
             $data = [];
             while ($row = $result->fetch_assoc()) {
@@ -326,9 +337,33 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
     }
 
+    private function cleanQuery($sql) {
+        $sql = trim($sql);
+        if (empty($sql)) {
+            return '';
+        }
+        // Remove all lines that start with a comment
+        $sql = preg_replace('/^\s*--.*$/m', '', $sql);
+        // Remove all lines that start with a hash
+        $sql = preg_replace('/^\s*#.*$/m', '', $sql);
+        // Remove all lines that start with a forward slash and asterisk
+        $sql = preg_replace('/^\s*\/\*.*?\*\//s', '', $sql);
+        // Remove all lines that start with an asterisk
+        $sql = preg_replace('/^\s*\*.*$/m', '', $sql);
+        if (stripos($sql, 'SELECT ') !== 0) {
+            $this->log("cleanQuery error", ['error' => 'SQL query does not start with SELECT']);
+            return '';
+        }
+        return $sql;
+    }
+
     private function getQueryByNumber($queryNumber) {
         try {
             $sql = "SELECT query FROM redcap_custom_queries WHERE qid = ?";
+            if (empty($sql)) {
+                $this->log("getQueryByNumber error", ['error' => 'SQL query is empty']);
+                return null;
+            }
             $result = $this->framework->query($sql, [$queryNumber]);
             if (empty($result)) {
                 return null;

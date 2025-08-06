@@ -17,7 +17,7 @@ $module->framework->initializeJavascriptModuleObject();
     <div class="row">
         <div class="col">
             <p>
-                The REDCap Reporting API is a simple API that allows you to access and manipulate data in your REDCap server.
+                The REDCap Reporting API provides a simple API that allows a user to access data in your REDCap server.
                 It is designed to be easy to use and integrate with other applications.
             </p>
         </div>
@@ -79,14 +79,14 @@ $module->framework->initializeJavascriptModuleObject();
                 </div>
             </div>
         <?php } ?>
-        <div id= "api-documentation" class="card mt-3 bg-light" style="<?= $hasToken ? '' : 'display: none;' ?>">
+        <div id="api-documentation" class="card mt-3 bg-light" style="<?= $hasToken ? '' : 'display: none;' ?>">
             <div class="card-body">
-                <h5 class="card-title">API Report Documentation</h5>
+                <h5 class="card-title">API Documentation</h5>
                 <div>
                     <span>
                         To call the API, send a <code>GET</code> to the following URL with an authorization header 
-                        containing your <code>Bearer</code> token and the report you
-                        want to access set as the query parameter <code>report</code>.
+                        containing your <code>Bearer</code> token and the report/query you want to access set as the 
+                        query parameter <code>report</code> or <code>query</code> respectively. 
                     </span>
                     <br>
                     <ul>
@@ -101,15 +101,41 @@ $module->framework->initializeJavascriptModuleObject();
                                 <li>Example: <code>report=project_housekeeping</code></li>
                             </ul>
                         </li>
+                        <li><code>query</code> parameter
+                            <ul>
+                                <li>This is the query ID whose contents you want to access</li>
+                                <li>Example: <code>query=123</code></li>
+                            </ul>
+                        </li>
                         <li>Authorization header
                             <ul>
-                                <li><span>This is your API token</span></li>
+                                <li><span>This will contain your API token as a <code>Bearer</code> token</span></li>
                                 <li>Example: <code>Authorization: Bearer 12345ABCDE67890FGHIJKL</code></li>
                             </ul>
                         </li>
                     </ul>
+                    <p><span><em>Note: You can only specify one of the following parameters:</em></span></p>
+                    <ul>
+                        <li><code>report</code> - to access a specific report</li>
+                        <li><code>query</code> - to access a specific query</li>
+                    </ul>
+                    <p>
+                        The response will be a JSON object containing the requested report or query data. The details of
+                        the response will depend on whether you are accessing a report or query. See details below.
+                    </p>
                 </div>
-                <div class="accordion" id="apiEndpoints">
+            </div>
+        </div>
+        <div class="card mt-3 bg-light" id="apiReportDocumentation" style="<?= $hasToken ? '' : 'display: none;' ?>">
+            <div class="card-body">
+                <h5 class="card-title">API Built-In Report Documentation</h5>
+                <p><span>
+                    The following built-in reports are available via the API. 
+                    They are designed to provide useful information about your REDCap server and projects.
+                </span></p>
+                <p><strong>The return value will be a JSON object containing the requested report data.</strong></p>
+                <h6><strong>Available Reports:</strong></h6>
+                <div class="accordion" id="apiReports">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="api_housekeeping_heading">
                             <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#api_project_housekeeping" aria-expanded="true" aria-controls="collapseOne">
@@ -215,13 +241,20 @@ $module->framework->initializeJavascriptModuleObject();
                 <p>
                     The Custom Query API allows you to access queries saved in the Database Query Tool via this API.
                 </p>
-                <h4>Custom Queries</h4>
-                <table class="table table-striped table-sm align-middle table-bordered table-hover">
+                <p>
+                    <span><strong>The return value will be a JSON object with the following structure:</strong></span>
+                    <ul>
+                        <li><code>data</code> - An array of objects with the query results</li>
+                        <li><code>query</code> - The SQL query text</li>
+                    </ul>
+                </p>
+                <h4>Available Custom Queries</h4>
+                <table class="table table-striped table-sm align-middle text-center table-bordered table-hover">
                     <thead>
                         <tr>
-                            <th>Query ID (qid)</th>
+                            <th>Folder</th>
                             <th>Query Name</th>
-                            <th>Query Allowed</th>
+                            <th>Query ID (qid) - use this in your API calls</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -233,9 +266,9 @@ $module->framework->initializeJavascriptModuleObject();
                         <?php } else {
                         foreach ($module->getAllowedQueries() as $query) { ?>
                             <tr>
-                                <td><?= $module->framework->escape($query['value']) ?></td>
+                                <td><?= $module->framework->escape($query['folder']) ?></td>
                                 <td><?= $module->framework->escape($query['title']) ?></td>
-                                <td><?= $module->isQueryAllowed($query['value']) ? 'Yes' : 'No'?></td>
+                                <td><?= $module->framework->escape($query['value']) ?></td>
                             </tr>
                         <?php }} ?>
                     </tbody>
