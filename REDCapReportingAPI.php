@@ -322,11 +322,11 @@ namespace YaleREDCap\REDCapReportingAPI;
             if (empty($query)) {
                 return ['error' => 'Invalid query number', 'errorCode' => 400];
             }
-            $query = $this->cleanQuery($query);
-            if (empty($query)) {
+            $cleanedQuery = $this->cleanQuery($query);
+            if (empty($cleanedQuery)) {
                 return ['error' => 'Invalid query', 'errorCode' => 400];
             }
-            $result = $this->framework->query($query, []);
+            $result = $this->framework->query($cleanedQuery, []);
             $data = [];
             while ($row = $result->fetch_assoc()) {
                 $data[] = $row;
@@ -337,24 +337,26 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
     }
 
-    private function cleanQuery($sql) {
-        $sql = trim($sql);
-        if (empty($sql)) {
-            return '';
+    private function cleanQuery($sql, $options = []) {
+        if (!isset($options['noop'])) {
+            $sqlClean = trim($sql);
+            if (empty($sqlClean)) {
+                return '';
+            }
+            // Remove all lines that start with a comment
+            $sqlClean = preg_replace('/^\s*--.*$/m', '', $sqlClean);
+            // Remove all lines that start with a hash
+            $sqlClean = preg_replace('/^\s*#.*$/m', '', $sqlClean);
+            // Remove all lines that start with a forward slash and asterisk
+            $sqlClean = preg_replace('/^\s*\/\*.*?\*\//s', '', $sqlClean);
+            // Remove all lines that start with an asterisk
+            $sqlClean = preg_replace('/^\s*\*.*$/m', '', $sqlClean);
+            if (stripos($sqlClean, 'SELECT ') !== 0) {
+                $this->log("cleanQuery error", ['error' => 'SQL query does not start with SELECT']);
+                return '';
+            }
         }
-        // Remove all lines that start with a comment
-        $sql = preg_replace('/^\s*--.*$/m', '', $sql);
-        // Remove all lines that start with a hash
-        $sql = preg_replace('/^\s*#.*$/m', '', $sql);
-        // Remove all lines that start with a forward slash and asterisk
-        $sql = preg_replace('/^\s*\/\*.*?\*\//s', '', $sql);
-        // Remove all lines that start with an asterisk
-        $sql = preg_replace('/^\s*\*.*$/m', '', $sql);
-        if (stripos($sql, 'SELECT ') !== 0) {
-            $this->log("cleanQuery error", ['error' => 'SQL query does not start with SELECT']);
-            return '';
-        }
-        return $sql;
+        return $sqlClean;
     }
 
     private function getQueryByNumber($queryNumber) {
