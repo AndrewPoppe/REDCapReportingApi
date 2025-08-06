@@ -84,12 +84,9 @@ Returns a JSON object with the following structure:
 
 ### Available Queries
 
-| Folder   | Query Name | Query ID (qid) |
-|----------|------------|----------------|
-| Test 2   | —          | 3              |
-| Folder 1 | EM Logs    | 1              |
+The available queries can be configured on the module configuration page.
 
-Use the `query` parameter in the URL to access a query:
+Use the `query` parameter in the URL to access a query by its ID:
 
 ```
 ...&query=1
