@@ -70,7 +70,7 @@ namespace YaleREDCap\REDCapReportingAPI;
 
     private function getAllUsers() {
         $users = [];
-        $sql = "SELECT username, CONCAT(user_firstname, ' ', user_lastname, ' (', username, ')') name FROM redcap_user_information ORDER BY user_lastname, user_firstname, username";
+        $sql = "SELECT username, CONCAT(user_firstname, ' ', user_lastname, ' (', username, ')') name FROM redcap_user_information WHERE super_user = 1 ORDER BY user_lastname, user_firstname, username";
         $result = $this->framework->query($sql, []);
         while ($row = $result->fetch_assoc()) {
             $users[] = [
