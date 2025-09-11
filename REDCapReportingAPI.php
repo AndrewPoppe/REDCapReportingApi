@@ -385,14 +385,12 @@ namespace YaleREDCap\REDCapReportingAPI;
      * Get header Authorization
      * */
     private function getAuthorizationHeader(){
-        $headers = 2;
+        $headers = '';
         if (isset($_SERVER['Authorization'])) {
             $headers = trim($_SERVER["Authorization"]);
-            return 3;
         }
         else if (isset($_SERVER['HTTP_AUTHORIZATION'])) {
             $headers = trim($_SERVER["HTTP_AUTHORIZATION"]);
-            return 4;
         } elseif (function_exists('apache_request_headers')) {
             $requestHeaders = apache_request_headers();
             $requestHeaders = array_combine(array_map('ucwords', array_keys($requestHeaders)), array_values($requestHeaders));
@@ -400,6 +398,7 @@ namespace YaleREDCap\REDCapReportingAPI;
                 $headers = trim($requestHeaders['Authorization']);
             }
         }
+        $this->log("getAuthorizationHeader", ['headers' => $headers]);
         return $headers;
     }
 
