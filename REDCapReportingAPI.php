@@ -260,40 +260,130 @@ namespace YaleREDCap\REDCapReportingAPI;
 
     private function getProjectsReport() {
         $sql = "SELECT 
-                    u.username creator,
-                    GROUP_CONCAT(r.username SEPARATOR ';') project_users,
+                    p.project_id,
+                    p.app_title 'project_name',
+                    p.online_offline 'project_online',
                     CASE
                         WHEN completed_time IS NOT NULL THEN 'Completed'
                         WHEN status = 0 THEN 'Development'
                         WHEN status = 1 THEN 'Production'
                         WHEN status = 2 THEN 'Analysis/Cleanup'
                         ELSE 'Unknown'
-                    END status_formatted,
-                    p.online_offline,
-                    p.app_title,
-                    p.creation_time,
-                    p.project_irb_number
-                from redcap_projects p
-                left join redcap_user_information u
-                on p.created_by = u.ui_id
-                left join redcap_user_rights r
-                on p.project_id = r.project_id
-                group by p.project_id";
-        $result = $this->framework->query($sql, []);
-        $projects = [];
-        while ($row = $result->fetch_assoc()) {
-            $projects[] = [
-                'project_status' => $row['status_formatted'],
-                'project_onlines' => $row['online_offline'],
-                'project_name' => $row['app_title'],
-                'project_created_by' => $row['creator'],
-                'project_phostid' => SERVER_NAME,
-                'project_created_on' => $row['creation_time'],
-                'project_irb_number' => $row['project_irb_number'],
-                'project_users' => $row['project_users'],
-            ];
+                    END 'project_status',
+                    p.creation_time 'project_created_on',
+                    u.username 'project_created_by',
+                    p.project_irb_number,
+                    p.surveys_enabled 'surveys',
+                    COALESCE(e.active, 0) * p.surveys_enabled 'econsent',
+                    GROUP_CONCAT(DISTINCT(r.username) SEPARATOR ';') 'project_users',
+                    GROUP_CONCAT(DISTINCT(r3.username) SEPARATOR ';') 'project_design',
+                    GROUP_CONCAT(DISTINCT(r2.username) SEPARATOR ';') 'project_userrights',
+                    (
+                        SELECT `value` FROM redcap_config WHERE field_name = 'redcap_base_url'
+                    ) 'project_phostid',
+                    IF (p.twilio_enabled = 1 AND p.mosio_api_key IS NOT NULL, 1, 0) mosio,
+                    IF (p.twilio_enabled = 1 AND p.twilio_account_sid IS NOT NULL, 1, 0) twilio,
+                    IF (p.realtime_webservice_enabled AND p.realtime_webservice_type = 'FHIR', 1, 0) cdis,
+                    IF (p.mycap_enabled, 1, 0) mycap,
+                    IF (mad.mobile, 1, 0) mobile,
+                    IF (mlm.active_languages > 1, 1, 0) mlm,
+                    IF (api.api = 1, 1, 0) api,
+                    IF (em.em = 1, 1, 0) em,
+                    rcs.record_count records
+                FROM redcap_projects p
+                LEFT JOIN redcap_user_information u
+                ON p.created_by = u.ui_id
+                LEFT JOIN redcap_user_rights r
+                ON p.project_id = r.project_id
+                LEFT JOIN (
+                    SELECT projects.project_id,
+                        rights.username,
+                        COALESCE(roles.user_rights, rights.user_rights) user_rights
+                    FROM redcap_projects projects
+                    LEFT JOIN redcap_user_rights rights
+                    ON projects.project_id = rights.project_id
+                    LEFT JOIN redcap_user_roles roles
+                    ON rights.role_id = roles.role_id
+                ) AS r2
+                ON p.project_id = r2.project_id
+                LEFT JOIN (
+                    SELECT projects2.project_id,
+                        rights2.username,
+                        COALESCE(roles2.design, rights2.design) design
+                    FROM redcap_projects projects2
+                    LEFT JOIN redcap_user_rights rights2
+                    ON projects2.project_id = rights2.project_id
+                    LEFT JOIN redcap_user_roles roles2
+                    ON rights2.role_id = roles2.role_id
+                ) AS r3
+                ON p.project_id = r3.project_id
+                LEFT JOIN (
+                    SELECT 
+                        project_id, 
+                        IF(SUM(active) > 0, 1, 0) 'active'
+                    FROM redcap_econsent 
+                    GROUP BY project_id
+                ) AS e
+                ON p.project_id = e.project_id
+                LEFT JOIN (
+                    SELECT project_id, 1 mobile 
+                    FROM redcap_mobile_app_devices
+                    WHERE revoked <> 1
+                    GROUP BY project_id
+                ) AS mad
+                ON p.project_id = mad.project_id
+                LEFT JOIN (
+                    SELECT project_id, 
+                    COUNT(value) active_languages 
+                    FROM redcap_multilanguage_config
+                    WHERE name = 'active'
+                    AND project_id IS NOT NULL
+                    AND project_id NOT IN (
+                        SELECT project_id 
+                        FROM redcap_multilanguage_config 
+                        WHERE name = 'disabled' 
+                        AND value = 1
+                    )
+                    GROUP BY project_id
+                ) AS mlm
+                ON p.project_id = mlm.project_id
+                LEFT JOIN (
+                    SELECT project_id, 
+                    1 api 
+                    FROM redcap_user_rights
+                    WHERE api_token IS NOT NULL
+                    GROUP BY project_id
+                ) AS api
+                ON p.project_id = api.project_id
+                LEFT JOIN (
+                    SELECT project_id, 1 em 
+                    FROM redcap_external_module_settings
+                    WHERE `key` = 'enabled'
+                    AND `value` = 'true'
+                    AND external_module_id IN (
+                        SELECT external_module_id 
+                        FROM redcap_external_module_settings 
+                        WHERE `key` = 'version'
+                    )
+                    AND project_id IS NOT NULL
+                    GROUP BY project_id
+                ) em
+                ON p.project_id = em.project_id
+                LEFT JOIN redcap_record_counts rcs
+                ON p.project_id = rcs.project_id
+                WHERE r2.user_rights = 1
+                AND r3.design = 1
+                GROUP BY p.project_id";
+        try {
+            $result = $this->framework->query($sql, []);
+            $projects = [];
+            while ($row = $result->fetch_assoc()) {
+                $projects[] = $row;
+            }
+            return $projects;
+        } catch (\Throwable $e) {
+            return ['error' => $e->getMessage(), 'errorCode' => 500];
         }
-        return $projects;
     }
 
     private static function getProjectStatus($project) {

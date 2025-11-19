@@ -164,7 +164,6 @@ $module->framework->initializeJavascriptModuleObject();
                                     <thead>
                                         <tr>
                                             <th>Field Name</th>
-                                            <th>Field Type</th>
                                             <th>Description</th>
                                             <th>Values</th>
                                             <th>Example</th>
@@ -172,60 +171,136 @@ $module->framework->initializeJavascriptModuleObject();
                                     </thead>
                                     <tbody>
                                         <tr>
+                                            <th scope="row">project_id</th>
+                                            <td>The project ID, formatted as a string</td>
+                                            <td>N/A</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
                                             <th scope="row">status</th>
-                                            <td>string</td>
                                             <td>The status of the project, formatted as a string</td>
                                             <td>Development, Production, Analysis/Cleanup, Completed</td>
                                             <td>Development</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">online_offline</th>
-                                            <td>integer</td>
                                             <td>The online/offline status of the project</td>
                                             <td>0 = Offline, 1 = Online</td>
                                             <td>1</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_name</th>
-                                            <td>string</td>
                                             <td>The name of the project</td>
                                             <td>N/A</td>
                                             <td>My Project</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_created_by</th>
-                                            <td>string</td>
                                             <td>The username of the creator of the project</td>
                                             <td>N/A</td>
                                             <td>jdoe</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_phostid</th>
-                                            <td>string</td>
                                             <td>The project host ID</td>
                                             <td><?=SERVER_NAME?></td>
                                             <td><?=SERVER_NAME?></td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_created_on</th>
-                                            <td>string</td>
                                             <td>The date the project was created</td>
                                             <td>N/A</td>
                                             <td>1970-01-01 12:00:00</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_irb_number</th>
-                                            <td>string</td>
                                             <td>The IRB number of the project</td>
                                             <td>N/A</td>
                                             <td>123456</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_users</th>
-                                            <td>string</td>
                                             <td>The users associated with the project, formatted as a semicolon-delimited string</td>
                                             <td>N/A</td>
                                             <td>jdoe;jsmith</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_design</th>
+                                            <td>The users with design rights associated with the project, formatted as a semicolon-delimited string</td>
+                                            <td>N/A</td>
+                                            <td>jdoe;jsmith</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">project_userrights</th>
+                                            <td>The users with user rights permissions associated with the project, formatted as a semicolon-delimited string</td>
+                                            <td>N/A</td>
+                                            <td>jdoe;jsmith</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">econsent</th>
+                                            <td>Whether the project has any eConsent surveys enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">records</th>
+                                            <td>The number of records in the project</td>
+                                            <td>N/A</td>
+                                            <td>100</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">surveys</th>
+                                            <td>Whether the project has any surveys enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">mosio</th>
+                                            <td>Whether the project has any Mosio integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">cdis</th>
+                                            <td>Whether the project has any CDIS integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">twilio</th>
+                                            <td>Whether the project has any Twilio integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">mycap</th>
+                                            <td>Whether the project has any MyCAP integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">mobileapp</th>
+                                            <td>Whether the project has any Mobile App integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">mlm</th>
+                                            <td>Whether the project has any MLM languages enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">api</th>
+                                            <td>Whether the project has any API tokens enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">em</th>
+                                            <td>Whether the project has any External Modules enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
                                         </tr>
                                     </tbody>
                                 </table>
