@@ -172,15 +172,15 @@ $module->framework->initializeJavascriptModuleObject();
                                     <tbody>
                                         <tr>
                                             <th scope="row">project_id</th>
-                                            <td>The project ID, formatted as a string</td>
+                                            <td>The project ID</td>
                                             <td>N/A</td>
                                             <td>1</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">status</th>
-                                            <td>The status of the project, formatted as a string</td>
-                                            <td>Development, Production, Analysis/Cleanup, Completed</td>
-                                            <td>Development</td>
+                                            <td>The status of the project</td>
+                                            <td><ul><li>0 = Development</li><li>1 = Production</li><li>2 = Analysis/Cleanup</li><li>3 = Completed</li><li>4 = Deleted</li></ul></td>
+                                            <td>1</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">online_offline</th>
@@ -194,6 +194,11 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>N/A</td>
                                             <td>My Project</td>
                                         </tr>
+                                            <th scope="row">project_created_on</th>
+                                            <td>The date the project was created</td>
+                                            <td>N/A</td>
+                                            <td>1970-01-01 12:00:00</td>
+                                        </tr>
                                         <tr>
                                             <th scope="row">project_created_by</th>
                                             <td>The username of the creator of the project</td>
@@ -201,22 +206,22 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>jdoe</td>
                                         </tr>
                                         <tr>
-                                            <th scope="row">project_phostid</th>
-                                            <td>The project host ID</td>
-                                            <td><?=SERVER_NAME?></td>
-                                            <td><?=SERVER_NAME?></td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">project_created_on</th>
-                                            <td>The date the project was created</td>
-                                            <td>N/A</td>
-                                            <td>1970-01-01 12:00:00</td>
-                                        </tr>
-                                        <tr>
                                             <th scope="row">project_irb_number</th>
                                             <td>The IRB number of the project</td>
                                             <td>N/A</td>
                                             <td>123456</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">surveys</th>
+                                            <td>Whether the project has any surveys enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">econsent</th>
+                                            <td>Whether the project has any eConsent surveys enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>1</td>
                                         </tr>
                                         <tr>
                                             <th scope="row">project_users</th>
@@ -237,32 +242,14 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>jdoe;jsmith</td>
                                         </tr>
                                         <tr>
-                                            <th scope="row">econsent</th>
-                                            <td>Whether the project has any eConsent surveys enabled</td>
-                                            <td>0 = No, 1 = Yes</td>
-                                            <td>1</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">records</th>
-                                            <td>The number of records in the project</td>
-                                            <td>N/A</td>
-                                            <td>100</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">surveys</th>
-                                            <td>Whether the project has any surveys enabled</td>
-                                            <td>0 = No, 1 = Yes</td>
-                                            <td>1</td>
+                                            <th scope="row">project_phostid</th>
+                                            <td>The project host ID</td>
+                                            <td><?=SERVER_NAME?></td>
+                                            <td><?=SERVER_NAME?></td>
                                         </tr>
                                         <tr>
                                             <th scope="row">mosio</th>
                                             <td>Whether the project has any Mosio integrations enabled</td>
-                                            <td>0 = No, 1 = Yes</td>
-                                            <td>0</td>
-                                        </tr>
-                                        <tr>
-                                            <th scope="row">cdis</th>
-                                            <td>Whether the project has any CDIS integrations enabled</td>
                                             <td>0 = No, 1 = Yes</td>
                                             <td>0</td>
                                         </tr>
@@ -273,13 +260,19 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>0</td>
                                         </tr>
                                         <tr>
+                                            <th scope="row">cdis</th>
+                                            <td>Whether the project has any CDIS integrations enabled</td>
+                                            <td>0 = No, 1 = Yes</td>
+                                            <td>0</td>
+                                        </tr>
+                                        <tr>
                                             <th scope="row">mycap</th>
                                             <td>Whether the project has any MyCAP integrations enabled</td>
                                             <td>0 = No, 1 = Yes</td>
                                             <td>0</td>
                                         </tr>
                                         <tr>
-                                            <th scope="row">mobileapp</th>
+                                            <th scope="row">mobile</th>
                                             <td>Whether the project has any Mobile App integrations enabled</td>
                                             <td>0 = No, 1 = Yes</td>
                                             <td>0</td>
@@ -301,6 +294,102 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>Whether the project has any External Modules enabled</td>
                                             <td>0 = No, 1 = Yes</td>
                                             <td>0</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">records</th>
+                                            <td>The number of records in the project</td>
+                                            <td>N/A</td>
+                                            <td>100</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">pifname</th>
+                                            <td>For research projects, the first name of the primary investigator</td>
+                                            <td>N/A</td>
+                                            <td>Jane</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">pilname</th>
+                                            <td>For research projects, the last name of the primary investigator</td>
+                                            <td>N/A</td>
+                                            <td>Jones</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">piemail</th>
+                                            <td>For research projects, the email address of the primary investigator</td>
+                                            <td>N/A</td>
+                                            <td>jane.jones@example.com</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">projectnotes</th>
+                                            <td>Notes about the project</td>
+                                            <td>N/A</td>
+                                            <td>This is a sample project note.</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">purpose</th>
+                                            <td>The purpose of the project</td>
+                                            <td><ul>
+                                                <li>0 = Practice/Just for fun</li>
+                                                <li>4 = Operational Support</li>
+                                                <li>2 = Research</li>
+                                                <li>3 = Quality Improvement</li>
+                                                <li>1 = Other</li>
+                                            </ul></td>
+                                            <td>2</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">purpose_oth</th>
+                                            <td>Other purpose details</td>
+                                            <td>N/A</td>
+                                            <td>Surveys</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___0</th>
+                                            <td>For research projects, is the project marked as 'Basic or bench research'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___1</th>
+                                            <td>For research projects, is the project marked as 'Clinical research study or trial'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___2</th>
+                                            <td>For research projects, is the project marked as 'Translational research 1 (applying discoveries to the development of trials and studies in humans)'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___3</th>
+                                            <td>For research projects, is the project marked as 'Translational research 2 (enhancing adoption of research findings and best practices into the community)'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___4</th>
+                                            <td>For research projects, is the project marked as 'Behavioral or psychosocial research study'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___5</th>
+                                            <td>For research projects, is the project marked as 'Epidemiology'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___6</th>
+                                            <td>For research projects, is the project marked as 'Repository (developing a data or specimen repository for future use by investigators)'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
+                                        </tr>
+                                        <tr>
+                                            <th scope="row">researchtype___7</th>
+                                            <td>For research projects, is the project marked as 'Other'</td>
+                                            <td>NULL = No, 1 = Yes</td>
+                                            <td>1</td>
                                         </tr>
                                     </tbody>
                                 </table>

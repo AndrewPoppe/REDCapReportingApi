@@ -264,11 +264,9 @@ namespace YaleREDCap\REDCapReportingAPI;
                     p.app_title 'project_name',
                     p.online_offline 'project_online',
                     CASE
-                        WHEN completed_time IS NOT NULL THEN 'Completed'
-                        WHEN status = 0 THEN 'Development'
-                        WHEN status = 1 THEN 'Production'
-                        WHEN status = 2 THEN 'Analysis/Cleanup'
-                        ELSE 'Unknown'
+                        WHEN p.date_deleted IS NOT NULL THEN 4
+                        WHEN p.completed_time IS NOT NULL THEN 3
+                        ELSE p.status
                     END 'project_status',
                     p.creation_time 'project_created_on',
                     u.username 'project_created_by',
@@ -289,7 +287,22 @@ namespace YaleREDCap\REDCapReportingAPI;
                     IF (mlm.active_languages > 1, 1, 0) mlm,
                     IF (api.api = 1, 1, 0) api,
                     IF (em.em = 1, 1, 0) em,
-                    rcs.record_count records
+                    rcs.record_count records,
+                    p.project_pi_firstname pifname,
+                    p.project_pi_lastname pilname,
+                    p.project_pi_email piemail,
+                    p.project_note projectnotes,
+                    p.purpose purpose,
+                    IF(purpose = 1, purpose_other, NULL) purpose_oth,
+                    IF(purpose = 2 AND purpose_other LIKE '%0%', 1, NULL) researchtype___0,
+                    IF(purpose = 2 AND purpose_other LIKE '%1%', 1, NULL) researchtype___1,
+                    IF(purpose = 2 AND purpose_other LIKE '%2%', 1, NULL) researchtype___2,
+                    IF(purpose = 2 AND purpose_other LIKE '%3%', 1, NULL) researchtype___3,
+                    IF(purpose = 2 AND purpose_other LIKE '%4%', 1, NULL) researchtype___4,
+                    IF(purpose = 2 AND purpose_other LIKE '%5%', 1, NULL) researchtype___5,
+                    IF(purpose = 2 AND purpose_other LIKE '%6%', 1, NULL) researchtype___6,
+                    IF(purpose = 2 AND purpose_other LIKE '%7%', 1, NULL) researchtype___7
+
                 FROM redcap_projects p
                 LEFT JOIN redcap_user_information u
                 ON p.created_by = u.ui_id
