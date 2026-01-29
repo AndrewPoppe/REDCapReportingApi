@@ -258,6 +258,22 @@ namespace YaleREDCap\REDCapReportingAPI;
         }
     }
 
+    /**
+     * Returns semicolon separated list of enabled external modules for a project
+     * "Enabled" means any of the following:
+     * 1. Module is not disabled system-wide and is enabled for the project
+     * 2. Module is not disabled system-wide and is enabled for all projects by default and is not disabled for the project
+     * 
+     * The returned value is the directory prefix of the external module(s)
+     * 
+     * @param int|string $project_id
+     * @return string
+     */
+    private function getEnabledExternalModules($project_id) {
+        $modules = $this->framework->getEnabledModules($project_id) ?? [];
+        return implode(';', array_keys($modules));
+    }
+
     private function getProjectsReport() {
         $sql = "SELECT 
                     p.project_id,
@@ -391,6 +407,7 @@ namespace YaleREDCap\REDCapReportingAPI;
             $result = $this->framework->query($sql, []);
             $projects = [];
             while ($row = $result->fetch_assoc()) {
+                $row['enabled_external_modules'] = $this->getEnabledExternalModules($row['project_id']);
                 $projects[] = $row;
             }
             return $projects;
