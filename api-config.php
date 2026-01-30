@@ -391,6 +391,12 @@ $module->framework->initializeJavascriptModuleObject();
                                             <td>NULL = No, 1 = Yes</td>
                                             <td>1</td>
                                         </tr>
+                                        <tr>
+                                            <th scope="row">enabled_external_modules</th>
+                                            <td>The external modules enabled for the project, formatted as a semicolon-delimited string. The value is the directory prefix of the module, as listed in the <code>redcap_external_modules</code> table.</td>
+                                            <td>N/A</td>
+                                            <td>module1;module2</td>
+                                        </tr>
                                     </tbody>
                                 </table>
                             </div>
